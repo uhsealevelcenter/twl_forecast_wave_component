@@ -47,6 +47,7 @@ def main():
     # -----------------------------------------------------------------------
 
     dshb_data = {}
+    dshb_geo = {}
     slfc_crds = {}
 
     # loop over regions and islands
@@ -154,6 +155,7 @@ def main():
             c['coordinates'] = crds_new
 
             # ---------------------------------------------------------------
+            # ---------------------------------------------------------------
             # aggregate information for this island into forecast dictionary
 
             dshb_isl = {
@@ -199,6 +201,29 @@ def main():
             dshb_data[region][island] = dshb_isl
 
             # ---------------------------------------------------------------
+            # ---------------------------------------------------------------
+            # aggregate information into geojson format
+
+            dshb_geo[island] = {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'id': island + '_' + '{:0>2}'.format(ii),
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': dshb_isl['coastline_coordinates'][ii]
+                        },
+                        'properties': {
+                            prp: dshb_isl[prp][ii] for prp in dshb_isl if prp != 'coastline_coordinates'
+                        }
+                    }
+                    for ii in range(len(c['center']))
+                ]
+            }
+
+            # ---------------------------------------------------------------
+            # ---------------------------------------------------------------
 
             slfc_crds[island] = c['center']
 
@@ -212,13 +237,19 @@ def main():
 
     fname = './forecast_wave_component.json'
     with open(fname, 'w') as f:
-        json.dump(dshb_data, f)
+        json.dump(dshb_data, f, indent=None)
+
+    # -----------------------------------------------------------------------
+
+    fname = './forecast_wave_component.geojson'
+    with open(fname, 'w') as f:
+        json.dump(dshb_geo, f, indent=None)
 
     # -----------------------------------------------------------------------
 
     fname = './sl_forecast_coordinates.json'
     with open(fname, 'w') as f:
-        json.dump(slfc_crds, f)
+        json.dump(slfc_crds, f, indent=None)
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -277,7 +308,7 @@ def calc_eta2(ptl, gam, b0, b1):
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
 
 # ---------------------------------------------------------------------------
